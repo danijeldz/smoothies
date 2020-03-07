@@ -2,10 +2,12 @@
   <div class="index container">
     <div class="card" v-for="smoothie in smoothies" :key="smoothie.id">
       <div class="card-content">
-        <i class="material-icons delete" @click="deleteSmoothie(smoothie.id)">delete</i>
+        <i class="material-icons delete" @click="deleteSmoothie(smoothie.id)"
+          >delete</i
+        >
         <h2 class="indigo-text">{{ smoothie.title }}</h2>
         <ul class="ingredients">
-          <li v-for="(ing, index) in smoothie.ingredients">
+          <li v-for="(ing, index) in smoothie.ingredients" :key="index">
             <span class="chip">{{ ing }}</span>
           </li>
         </ul>
@@ -15,30 +17,13 @@
 </template>
 
 <script>
+import db from "@/firebase/init";
+
 export default {
   name: "Index",
   data() {
     return {
-      smoothies: [
-        {
-          title: "Vue Brew",
-          slug: "vue-brew",
-          ingredients: ["mango", "peanuts", "pineapple"],
-          id: "1"
-        },
-        {
-          title: "Vue Brew",
-          slug: "vue-brew",
-          ingredients: ["avocado", "kakao", "banana"],
-          id: "2"
-        },
-        {
-          title: "Vue Brew",
-          slug: "vue-brew",
-          ingredients: ["apple", "chocolate", "pumpkin"],
-          id: "3"
-        }
-      ]
+      smoothies: []
     };
   },
   methods: {
@@ -47,6 +32,16 @@ export default {
         return smoothie.id !== id;
       });
     }
+  },
+  created() {
+    //fetch data from the firestore
+    db.collection("smoothies")
+      .get()
+      .then(snapshot => {
+        snapshot.forEach(doc => {
+          console.log(doc.data());
+        });
+      });
   }
 };
 </script>
