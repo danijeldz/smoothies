@@ -5,13 +5,24 @@
       <div class="field title">
         <label for="title">Smoothie title:</label>
         <input type="text" name="title" v-model="title" />
-        <div v-for="(ing, index) in ingredients" :key="index">
+        <div v-for="(ing, index) in ingredients" :key="index" class="field">
           <label for="ingredient">Ingredient:</label>
-          <input type="text" name="ingredient" id v-model="ingredients[index]" />
+          <input
+            type="text"
+            name="ingredient"
+            id
+            v-model="ingredients[index]"
+          />
+          <i class="material-icons delete" @click="DeleteIng(ing)">delete</i>
         </div>
         <div class="field add-ingredient">
           <label for="add-ingredients">Add an ingredient</label>
-          <input type="text" name="add-ingredient" @keydown.tab.prevent="AddIng" v-model="another" />
+          <input
+            type="text"
+            name="add-ingredient"
+            @keydown.tab.prevent="AddIng"
+            v-model="another"
+          />
         </div>
         <div class="field center-align">
           <p v-if="feedback" class="red-text">{{ feedback }}</p>
@@ -23,6 +34,9 @@
 </template>
 
 <script>
+import db from "@/firebase/init";
+import slugify from "slugify";
+
 export default {
   name: "AddSmoothie",
   data() {
@@ -30,12 +44,34 @@ export default {
       title: null,
       another: null,
       ingredients: [],
-      feedback: null
+      feedback: null,
+      slug: null
     };
   },
   methods: {
     AddSmoothie() {
-      console.log(this.title, this.ingredients);
+      if (this.title) {
+        this.feedback = null;
+        this.slug = slugify(this.title, {
+          replacement: "-",
+          remove: /[$*_+~()'"!\-:@]/g,
+          lower: true
+        });
+        db.collection("smoothies")
+          .add({
+            title: this.title,
+            ingredients: this.ingredients,
+            slug: this.slug
+          })
+          .then(() => {
+            this.$router.push({ name: "Index" });
+          })
+          .catch(err => {
+            console.log(err);
+          });
+      } else {
+        this.feedback = "You must enter a smoothie title";
+      }
     },
     AddIng() {
       if (this.another) {
@@ -45,6 +81,11 @@ export default {
       } else {
         this.feedback = "You must enter a valid value to add an ingredient";
       }
+    },
+    DeleteIng(ing) {
+      this.ingredients = this.ingredients.filter(ingredient => {
+        return ingredient != ing;
+      });
     }
   }
 };
@@ -62,6 +103,16 @@ export default {
 }
 
 .add-smoothie .field {
+  position: relative;
   margin: 20px auto;
+}
+
+.add-smoothie .delete {
+  position: absolute;
+  right: 0;
+  bottom: 16px;
+  color: #aaa;
+  font-size: 1.4em;
+  cursor: pointer;
 }
 </style>
